@@ -20,6 +20,11 @@ typedef struct {
 // Declared manually so the compiler knows the Button type
 bool buttonPressed(Button *b);
 
+void handleEntry(Occupancy *o);
+void handleExit(Occupancy *o);
+void updateLEDs(Occupancy *o);
+void printStats(Occupancy *o);
+
 #include <LiquidCrystal.h>
 
 // ---------- Pins ----------
@@ -77,6 +82,51 @@ bool buttonPressed(Button *b) {
   return pressed;
 }
 
+// ---------- Entry: adds one person, rejects if full ----------
+void handleEntry(Occupancy *o) {
+  if (o->current >= o->maxCapacity) {
+    o->rejectedEntries++;
+    Serial.println("ERROR: Entry rejected - facility is full");
+    return;
+  }
+  o->current++;
+  o->totalEntries++;
+  Serial.print("EVENT: Entry | Inside: ");
+  Serial.println(o->current);
+}
+
+// ---------- Exit: removes one person, rejects if empty ----------
+void handleExit(Occupancy *o) {
+  if (o->current <= 0) {
+    o->rejectedExits++;
+    Serial.println("ERROR: Exit rejected - facility is empty");
+    return;
+  }
+  o->current--;
+  o->totalExits++;
+  Serial.print("EVENT: Exit | Inside: ");
+  Serial.println(o->current);
+}
+
+// ---------- LEDs: green if space, red if full ----------
+void updateLEDs(Occupancy *o) {
+  bool full = (o->current >= o->maxCapacity);
+  digitalWrite(GREEN_LED, full ? LOW : HIGH);
+  digitalWrite(RED_LED, full ? HIGH : LOW);
+}
+
+// ---------- Prints statistics to the Serial Monitor ----------
+void printStats(Occupancy *o) {
+  Serial.print("STATS | In:");
+  Serial.print(o->totalEntries);
+  Serial.print(" Out:");
+  Serial.print(o->totalExits);
+  Serial.print(" RejectedIn:");
+  Serial.print(o->rejectedEntries);
+  Serial.print(" RejectedOut:");
+  Serial.println(o->rejectedExits);
+}
+
 // ---------- Setup ----------
 void setup() {
   Serial.begin(9600);
@@ -93,13 +143,23 @@ void setup() {
     while (true) {}                         // stop the program safely
   }
   Serial.println("=== Smart Occupancy System Ready ===");
+  updateLEDs(occ);
 }
 
 void loop() {
+  bool changed = false;
+
   if (buttonPressed(&entryBtn)) {
-    Serial.println("Entry button pressed");
+    handleEntry(occ);
+    changed = true;
   }
   if (buttonPressed(&exitBtn)) {
-    Serial.println("Exit button pressed");
+    handleExit(occ);
+    changed = true;
+  }
+
+  if (changed) {
+    updateLEDs(occ);
+    printStats(occ);
   }
 }
