@@ -1,17 +1,3 @@
-#include <LiquidCrystal.h>
-
-// ---------- Pins ----------
-const int ENTRY_PIN = 7;
-const int EXIT_PIN  = 8;
-const int GREEN_LED = 9;
-const int RED_LED   = 10;
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
-// ---------- Settings ----------
-const int MAX_CAPACITY = 5;
-const unsigned long DEBOUNCE_MS = 50;
-const unsigned long LCD_REFRESH_MS = 500;
-
 // ---------- Structures ----------
 // Holds all occupancy information
 typedef struct {
@@ -30,6 +16,23 @@ typedef struct {
   int stableState;
   unsigned long lastChange;
 } Button;
+
+// Declared manually so the compiler knows the Button type
+bool buttonPressed(Button *b);
+
+#include <LiquidCrystal.h>
+
+// ---------- Pins ----------
+const int ENTRY_PIN = 7;
+const int EXIT_PIN  = 8;
+const int GREEN_LED = 9;
+const int RED_LED   = 10;
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// ---------- Settings ----------
+const int MAX_CAPACITY = 5;
+const unsigned long DEBOUNCE_MS = 50;
+const unsigned long LCD_REFRESH_MS = 500;
 
 // ---------- Global variables ----------
 Occupancy *occ = NULL;                      // will point to dynamically allocated memory
@@ -54,6 +57,26 @@ Occupancy *createOccupancy(int maxCap) {
   return o;
 }
 
+// ---------- Non-blocking button debounce ----------
+// Returns true once each time the button is pressed.
+// Uses millis() instead of delay(), so the program never freezes.
+bool buttonPressed(Button *b) {
+  int reading = digitalRead(b->pin);
+  bool pressed = false;
+
+  if (reading != b->lastReading) {
+    b->lastChange = millis();               // reading changed, restart the timer
+  }
+  if ((millis() - b->lastChange) > DEBOUNCE_MS && reading != b->stableState) {
+    b->stableState = reading;
+    if (b->stableState == LOW) {            // LOW = pressed (pull-up wiring)
+      pressed = true;
+    }
+  }
+  b->lastReading = reading;
+  return pressed;
+}
+
 // ---------- Setup ----------
 void setup() {
   Serial.begin(9600);
@@ -73,4 +96,10 @@ void setup() {
 }
 
 void loop() {
+  if (buttonPressed(&entryBtn)) {
+    Serial.println("Entry button pressed");
+  }
+  if (buttonPressed(&exitBtn)) {
+    Serial.println("Exit button pressed");
+  }
 }
