@@ -31,7 +31,45 @@ typedef struct {
   unsigned long lastChange;
 } Button;
 
+// ---------- Global variables ----------
+Occupancy *occ = NULL;                      // will point to dynamically allocated memory
+Button entryBtn = {ENTRY_PIN, HIGH, HIGH, 0};
+Button exitBtn  = {EXIT_PIN,  HIGH, HIGH, 0};
+unsigned long lastLcd = 0;
+
+// ---------- Memory allocation ----------
+// Allocates an Occupancy record and sets starting values.
+// Returns NULL if there is not enough memory.
+Occupancy *createOccupancy(int maxCap) {
+  Occupancy *o = (Occupancy *)malloc(sizeof(Occupancy));
+  if (o == NULL) {
+    return NULL;
+  }
+  o->current = 0;
+  o->maxCapacity = maxCap;
+  o->totalEntries = 0;
+  o->totalExits = 0;
+  o->rejectedEntries = 0;
+  o->rejectedExits = 0;
+  return o;
+}
+
+// ---------- Setup ----------
 void setup() {
+  Serial.begin(9600);
+  pinMode(ENTRY_PIN, INPUT_PULLUP);
+  pinMode(EXIT_PIN, INPUT_PULLUP);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(RED_LED, OUTPUT);
+  lcd.begin(16, 2);
+
+  occ = createOccupancy(MAX_CAPACITY);
+  if (occ == NULL) {
+    Serial.println("ERROR: memory allocation failed");
+    lcd.print("Memory error");
+    while (true) {}                         // stop the program safely
+  }
+  Serial.println("=== Smart Occupancy System Ready ===");
 }
 
 void loop() {
