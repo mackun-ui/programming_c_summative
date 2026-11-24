@@ -1,5 +1,4 @@
 // ---------- Structures ----------
-// Holds all occupancy information
 typedef struct {
   int current;                   // people currently inside
   int maxCapacity;               // facility limit
@@ -9,7 +8,6 @@ typedef struct {
   unsigned long rejectedExits;
 } Occupancy;
 
-// Holds the debounce state of one button
 typedef struct {
   int pin;
   int lastReading;
@@ -17,13 +15,13 @@ typedef struct {
   unsigned long lastChange;
 } Button;
 
-// Declared manually so the compiler knows the Button type
+// Declared manually so the compiler knows the types
 bool buttonPressed(Button *b);
-
 void handleEntry(Occupancy *o);
 void handleExit(Occupancy *o);
 void updateLEDs(Occupancy *o);
 void printStats(Occupancy *o);
+void updateLCD(Occupancy *o);
 
 #include <LiquidCrystal.h>
 
@@ -40,14 +38,12 @@ const unsigned long DEBOUNCE_MS = 50;
 const unsigned long LCD_REFRESH_MS = 500;
 
 // ---------- Global variables ----------
-Occupancy *occ = NULL;                      // will point to dynamically allocated memory
+Occupancy *occ = NULL;
 Button entryBtn = {ENTRY_PIN, HIGH, HIGH, 0};
 Button exitBtn  = {EXIT_PIN,  HIGH, HIGH, 0};
 unsigned long lastLcd = 0;
 
 // ---------- Memory allocation ----------
-// Allocates an Occupancy record and sets starting values.
-// Returns NULL if there is not enough memory.
 Occupancy *createOccupancy(int maxCap) {
   Occupancy *o = (Occupancy *)malloc(sizeof(Occupancy));
   if (o == NULL) {
@@ -63,18 +59,16 @@ Occupancy *createOccupancy(int maxCap) {
 }
 
 // ---------- Non-blocking button debounce ----------
-// Returns true once each time the button is pressed.
-// Uses millis() instead of delay(), so the program never freezes.
 bool buttonPressed(Button *b) {
   int reading = digitalRead(b->pin);
   bool pressed = false;
 
   if (reading != b->lastReading) {
-    b->lastChange = millis();               // reading changed, restart the timer
+    b->lastChange = millis();
   }
   if ((millis() - b->lastChange) > DEBOUNCE_MS && reading != b->stableState) {
     b->stableState = reading;
-    if (b->stableState == LOW) {            // LOW = pressed (pull-up wiring)
+    if (b->stableState == LOW) {
       pressed = true;
     }
   }
@@ -82,7 +76,7 @@ bool buttonPressed(Button *b) {
   return pressed;
 }
 
-// ---------- Entry: adds one person, rejects if full ----------
+// ---------- Entry ----------
 void handleEntry(Occupancy *o) {
   if (o->current >= o->maxCapacity) {
     o->rejectedEntries++;
@@ -95,7 +89,7 @@ void handleEntry(Occupancy *o) {
   Serial.println(o->current);
 }
 
-// ---------- Exit: removes one person, rejects if empty ----------
+// ---------- Exit ----------
 void handleExit(Occupancy *o) {
   if (o->current <= 0) {
     o->rejectedExits++;
@@ -108,14 +102,14 @@ void handleExit(Occupancy *o) {
   Serial.println(o->current);
 }
 
-// ---------- LEDs: green if space, red if full ----------
+// ---------- LEDs ----------
 void updateLEDs(Occupancy *o) {
   bool full = (o->current >= o->maxCapacity);
   digitalWrite(GREEN_LED, full ? LOW : HIGH);
   digitalWrite(RED_LED, full ? HIGH : LOW);
 }
 
-// ---------- Prints statistics to the Serial Monitor ----------
+// ---------- Serial statistics ----------
 void printStats(Occupancy *o) {
   Serial.print("STATS | In:");
   Serial.print(o->totalEntries);
@@ -125,6 +119,25 @@ void printStats(Occupancy *o) {
   Serial.print(o->rejectedEntries);
   Serial.print(" RejectedOut:");
   Serial.println(o->rejectedExits);
+}
+
+// ---------- LCD ----------
+void updateLCD(Occupancy *o) {
+  lcd.setCursor(0, 0);
+  lcd.print("Inside: ");
+  lcd.print(o->current);
+  lcd.print("/");
+  lcd.print(o->maxCapacity);
+  lcd.print("   ");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Free: ");
+  lcd.print(o->maxCapacity - o->current);
+  if (o->current >= o->maxCapacity) {
+    lcd.print(" FULL   ");
+  } else {
+    lcd.print("        ");
+  }
 }
 
 // ---------- Setup ----------
@@ -140,12 +153,14 @@ void setup() {
   if (occ == NULL) {
     Serial.println("ERROR: memory allocation failed");
     lcd.print("Memory error");
-    while (true) {}                         // stop the program safely
+    while (true) {}
   }
   Serial.println("=== Smart Occupancy System Ready ===");
   updateLEDs(occ);
+  updateLCD(occ);
 }
 
+// ---------- Main loop ----------
 void loop() {
   bool changed = false;
 
@@ -161,5 +176,11 @@ void loop() {
   if (changed) {
     updateLEDs(occ);
     printStats(occ);
+  }
+
+  // Periodic LCD refresh without blocking
+  if (millis() - lastLcd >= LCD_REFRESH_MS) {
+    lastLcd = millis();
+    updateLCD(occ);
   }
 }
