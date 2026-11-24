@@ -28,3 +28,29 @@ check_command() {
     fi
     return 0
 }
+
+# ---------- Pause helper ----------
+pause() {
+    read -r -p "Press Enter to continue..."
+}
+
+# ---------- 1. System information ----------
+show_system_info() {
+    echo "===== SYSTEM INFORMATION ====="
+    echo "Hostname: $(hostname)"
+
+    if [ -f /etc/os-release ]; then
+        os_name=$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')
+    else
+        os_name=$(uname -s)
+    fi 
+    echo "OS: $os_name"
+
+    echo "Kernel: $(uname -r)"
+    echo "Uptime: $(uptime -p 2>/dev/null || uptime)"
+    echo "Date/Time: $(date '+%Y-%m-%d %H:%M:%S')"
+    log_activity "Viewed system information"
+}
+# ---------- Temporary test (delete after testing) ----------
+show_system_info
+cat "$LOG_FILE"
