@@ -154,7 +154,3 @@ monitor_memory() {
     fi
     log_activity "Monitored memory utilization (${percent}%)"
 }
-
-# ---------- Temporary test (delete after testing) ----------
-monitor_memory
-cat "$LOG_FILE"
