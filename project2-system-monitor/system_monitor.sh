@@ -379,3 +379,72 @@ clear_log() {
         echo "Cancelled."
     fi
 }
+
+# ---------- Startup check for required commands ----------
+check_requirements() {
+    local missing=0
+    for cmd in ps df free awk uptime hostname uname; do
+        if ! check_command "$cmd"; then
+            missing=1
+        fi
+    done
+    return $missing
+}
+
+# ---------- View processes, then optionally search ----------
+view_and_search_processes() {
+    view_processes
+    echo
+    read -r -p "Search for a specific process? [y/n]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        search_process
+    fi
+}
+
+# ---------- 8. Interactive menu ----------
+show_menu() {
+    echo
+    echo "===== SYSTEM HEALTH MONITOR ====="
+    echo "1. Display system information"
+    echo "2. Monitor CPU utilization"
+    echo "3. Monitor memory utilization"
+    echo "4. Monitor disk utilization"
+    echo "5. View and search running processes"
+    echo "6. Terminate a process"
+    echo "7. Generate a system health report"
+    echo "8. View activity history"
+    echo "9. Clear activity log"
+    echo "10. Exit"
+}
+
+main() {
+    if ! check_requirements; then
+        echo "Warning: some commands are missing, so some options may not work."
+    fi
+    log_activity "Application started"
+
+    while true; do
+        show_menu
+        read -r -p "Choose an option [1-10]: " choice
+        echo
+        case "$choice" in
+            1) show_system_info ;;
+            2) monitor_cpu ;;
+            3) monitor_memory ;;
+            4) monitor_disk ;;
+            5) view_and_search_processes ;;
+            6) terminate_process ;;
+            7) generate_report ;;
+            8) view_log ;;
+            9) clear_log ;;
+            10) log_activity "Application closed"
+                echo "Goodbye."
+                exit 0 ;;
+            *) echo "Invalid selection. Enter a number from 1 to 10." ;;
+        esac
+        echo
+        pause
+    done
+}
+
+main
