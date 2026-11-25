@@ -112,6 +112,49 @@ monitor_cpu() {
     log_activity "Monitored CPU utilization (${usage}%)"
 }
 
+# ---------- 3. Memory monitoring ----------
+monitor_memory() {
+    echo "===== MEMORY UTILIZATION ====="
+    if ! check_command free; then
+        return 1
+    fi
+
+    local total used available percent
+    total=$(free -m | awk '/^Mem:/ {print $2}')
+    available=$(free -m | awk '/^Mem:/ {print $7}')
+
+    if [ -z "$total" ] || [ "$total" -eq 0 ]; then
+        echo "Cannot read memory information."
+        log_activity "ERROR: could not read memory information"
+        return 1
+    fi
+
+    used=$((total - available))
+    percent=$((100 * used / total))
+
+    echo "Total: ${total} MB"
+    echo "Used: ${used} MB"
+    echo "Available: ${available} MB"
+    echo "Usage: ${percent}%"
+
+    read -r -p "Memory warning threshold in % [current: ${MEM_THRESHOLD}] (Enter to keep): " input
+    if [ -n "$input" ]; then
+        if is_valid_threshold "$input"; then
+            MEM_THRESHOLD=$input
+        else
+            echo "Invalid threshold. Keeping ${MEM_THRESHOLD}%."
+        fi
+    fi
+
+    if [ "$percent" -ge "$MEM_THRESHOLD" ]; then
+        echo "WARNING: memory usage (${percent}%) is above the threshold (${MEM_THRESHOLD}%)!"
+        log_activity "WARNING: memory usage ${percent}% above threshold ${MEM_THRESHOLD}%"
+    else
+        echo "Memory usage is within the threshold (${MEM_THRESHOLD}%)."
+    fi
+    log_activity "Monitored memory utilization (${percent}%)"
+}
+
 # ---------- Temporary test (delete after testing) ----------
-monitor_cpu
+monitor_memory
 cat "$LOG_FILE"
