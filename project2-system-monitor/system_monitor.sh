@@ -190,6 +190,102 @@ monitor_disk() {
     fi
     log_activity "Monitored disk utilization"
 }
+
+# ---------- 5. Process management ----------
+PROTECTED_NAMES="systemd init sshd kthreadd login dbus-daemon"
+
+# Shows the top running processes
+view_processes() {
+    echo "===== RUNNING PROCESSES (top 15 by CPU) ====="
+    ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -n 16
+    log_activity "Viewed running processes"
+}
+
+# Searches by PID (numbers) or by name (text)
+search_process() {
+    read -r -p "Enter a process name or PID: " query
+    if [ -z "$query" ]; then
+        echo "Error: nothing entered."
+        return 1
+    fi
+
+    if [[ "$query" =~ ^[0-9]+$ ]]; then
+        if ps -p "$query" > /dev/null 2>&1; then
+            ps -p "$query" -o pid,user,%cpu,%mem,comm
+            log_activity "Searched for PID $query (found)"
+        else
+            echo "No process found with PID $query."
+            log_activity "Searched for PID $query (not found)"
+        fi
+    else
+        local matches
+        matches=$(ps -eo pid,user,%cpu,%mem,comm | awk -v q="$query" 'NR>1 && index(tolower($5), tolower(q)) > 0')
+        if [ -n "$matches" ]; then
+            echo "PID USER %CPU %MEM COMMAND"
+            echo "$matches"
+            log_activity "Searched for process '$query' (found)"
+        else
+            echo "No process found matching '$query'."
+            log_activity "Searched for process '$query' (not found)"
+        fi
+    fi
+}
+
+# Terminates a process after safety checks and confirmation
+terminate_process() {
+    read -r -p "Enter the PID to terminate: " pid
+    if ! [[ "$pid" =~ ^[0-9]+$ ]]; then
+        echo "Error: invalid PID."
+        return 1
+    fi
+    if ! ps -p "$pid" > /dev/null 2>&1; then
+        echo "Error: no process with PID $pid."
+        log_activity "ERROR: terminate failed, PID $pid not found"
+        return 1
+    fi
+
+    local name owner
+    name=$(ps -p "$pid" -o comm= | tr -d ' ')
+    owner=$(ps -p "$pid" -o user= | tr -d ' ')
+
+    # Protected processes
+    if [ "$pid" -le 1 ] || [ "$pid" -eq $$ ] || [ "$pid" -eq "$PPID" ]; then
+        echo "Error: PID $pid is protected and cannot be terminated."
+        log_activity "BLOCKED: attempt to terminate protected PID $pid"
+        return 1
+    fi
+    for p in $PROTECTED_NAMES; do
+        if [ "$name" = "$p" ]; then
+            echo "Error: '$name' is a protected system process."
+            log_activity "BLOCKED: attempt to terminate protected process $name"
+            return 1
+        fi
+    done
+
+    # Permission check
+    if [ "$owner" != "$(whoami)" ]; then
+        echo "Error: you do not have permission to terminate processes owned by '$owner'."
+        log_activity "BLOCKED: no permission to terminate PID $pid ($owner)"
+        return 1
+    fi
+
+    read -r -p "Terminate '$name' (PID $pid)? [y/N]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        if kill "$pid" 2>/dev/null; then
+            echo "Process $pid terminated."
+            log_activity "Terminated process $name (PID $pid)"
+        else
+            echo "Error: could not terminate process $pid."
+            log_activity "ERROR: failed to terminate PID $pid"
+        fi
+    else
+        echo "Cancelled."
+        log_activity "Cancelled termination of PID $pid"
+    fi
+}
+
 # ---------- Temporary test (delete after testing) ----------
-monitor_disk
+view_processes
+search_process
+terminate_process
 cat "$LOG_FILE"
