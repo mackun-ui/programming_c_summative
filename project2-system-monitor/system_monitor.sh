@@ -283,3 +283,71 @@ terminate_process() {
         log_activity "Cancelled termination of PID $pid"
     fi
 }
+
+# ---------- 6. System health report ----------
+generate_report() {
+    echo "===== GENERATE SYSTEM HEALTH REPORT ====="
+    read -r -p "Directory to save the report [${REPORT_DIR}]: " dir
+    dir=${dir:-$REPORT_DIR}
+
+    # Create the directory if it does not exist
+    if [ ! -d "$dir" ]; then
+        read -r -p "'$dir' does not exist. Create it? [y/N]: " answer
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+            if ! mkdir -p "$dir" 2>/dev/null; then
+                echo "Error: could not create '$dir'."
+                log_activity "ERROR: could not create report directory $dir"
+                return 1
+            fi
+        else
+            echo "Cancelled."
+            return 1
+        fi
+    fi
+
+    if [ ! -w "$dir" ]; then
+        echo "Error: no permission to write in '$dir'."
+        log_activity "ERROR: no write permission for $dir"
+        return 1
+    fi
+
+    if ! check_command free || ! check_command df; then
+        return 1
+    fi
+
+    local file cpu total available used percent
+    file="$dir/health_report_$(date '+%Y%m%d_%H%M%S').txt"
+    cpu=$(get_cpu_usage)
+    total=$(free -m | awk '/^Mem:/ {print $2}')
+    available=$(free -m | awk '/^Mem:/ {print $7}')
+    used=$((total - available))
+    percent=$((100 * used / total))
+
+    {
+        echo "===== SYSTEM HEALTH REPORT ====="
+        echo "Generated: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Hostname: $(hostname)"
+        echo "Uptime: $(uptime -p)"
+        echo
+        echo "--- CPU ---"
+        echo "Usage: ${cpu}% (threshold ${CPU_THRESHOLD}%)"
+        [ "$cpu" -ge "$CPU_THRESHOLD" ] && echo "WARNING: CPU usage above threshold"
+        echo
+        echo "--- Memory ---"
+        echo "Total: ${total} MB | Used: ${used} MB | Available: ${available} MB"
+        echo "Usage: ${percent}% (threshold ${MEM_THRESHOLD}%)"
+        [ "$percent" -ge "$MEM_THRESHOLD" ] && echo "WARNING: memory usage above threshold"
+        echo
+        echo "--- Disk ---"
+        df -h -x tmpfs -x devtmpfs -x squashfs
+    } > "$file" 2>/dev/null
+
+    if [ -s "$file" ]; then
+        echo "Report saved to: $file"
+        log_activity "Generated health report: $file"
+    else
+        echo "Error: could not write the report."
+        log_activity "ERROR: failed to write report $file"
+        return 1
+    fi
+}
