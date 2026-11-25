@@ -269,7 +269,7 @@ terminate_process() {
         return 1
     fi
 
-    read -r -p "Terminate '$name' (PID $pid)? [y/N]: " answer
+    read -r -p "Terminate '$name' (PID $pid)? [y/n]: " answer
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         if kill "$pid" 2>/dev/null; then
             echo "Process $pid terminated."
@@ -292,7 +292,7 @@ generate_report() {
 
     # Create the directory if it does not exist
     if [ ! -d "$dir" ]; then
-        read -r -p "'$dir' does not exist. Create it? [y/N]: " answer
+        read -r -p "'$dir' does not exist. Create it? [y/n]: " answer
         if [[ "$answer" =~ ^[Yy]$ ]]; then
             if ! mkdir -p "$dir" 2>/dev/null; then
                 echo "Error: could not create '$dir'."
@@ -349,5 +349,33 @@ generate_report() {
         echo "Error: could not write the report."
         log_activity "ERROR: failed to write report $file"
         return 1
+    fi
+}
+
+# ---------- 7. Activity log ----------
+view_log() {
+    echo "===== ACTIVITY LOG ====="
+    if [ ! -s "$LOG_FILE" ]; then
+        echo "The activity log is empty."
+        return 0
+    fi
+    cat "$LOG_FILE"
+}
+
+clear_log() {
+    if [ ! -s "$LOG_FILE" ]; then
+        echo "The activity log is already empty."
+        return 0
+    fi
+    read -r -p "Clear the whole activity log? [y/n]: " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        if : > "$LOG_FILE" 2>/dev/null; then
+            echo "Activity log cleared."
+            log_activity "Activity log cleared"
+        else
+            echo "Error: could not clear the log."
+        fi
+    else
+        echo "Cancelled."
     fi
 }
