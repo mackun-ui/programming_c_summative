@@ -1,0 +1,21 @@
+2026-11-25 19:17:44 | Application started
+2026-11-25 19:19:05 | Monitored CPU utilization (0%)
+2026-11-25 19:20:43 | Application closed
+2026-11-25 19:20:57 | Application started
+2026-11-25 19:21:03 | Monitored memory utilization (7%)
+2026-11-25 19:21:42 | Application closed
+2026-11-25 19:21:47 | Application started
+2026-11-25 19:21:55 | WARNING: disk /usr/src/linux-headers-6.18.58.1-microsoft-standard-WSL2 at 100% above threshold 80%
+2026-11-25 19:21:55 | Monitored disk utilization
+2026-11-25 19:23:26 | Application closed
+2026-11-25 19:24:30 | Application started
+2026-11-25 19:24:41 | Viewed running processes
+2026-11-25 19:24:56 | Searched for PID 274 (found)
+2026-11-25 19:25:26 | Terminated process sleep (PID 2493)
+2026-11-25 19:27:42 | Application closed
+2026-11-25 19:27:52 | Application started
+2026-11-25 19:28:18 | Viewed running processes
+2026-11-25 19:28:29 | Searched for PID 0 (not found)
+2026-11-25 19:28:39 | Viewed running processes
+2026-11-25 19:29:27 | BLOCKED: attempt to terminate protected PID 1
+2026-11-25 19:32:29 | Application closed
