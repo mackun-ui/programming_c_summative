@@ -283,9 +283,3 @@ terminate_process() {
         log_activity "Cancelled termination of PID $pid"
     fi
 }
-
-# ---------- Temporary test (delete after testing) ----------
-view_processes
-search_process
-terminate_process
-cat "$LOG_FILE"
