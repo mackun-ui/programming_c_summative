@@ -154,3 +154,42 @@ monitor_memory() {
     fi
     log_activity "Monitored memory utilization (${percent}%)"
 }
+
+# ---------- 4. Disk monitoring ----------
+monitor_disk() {
+    echo "===== DISK UTILISATION ====="
+    if ! check_command df; then
+        return 1
+    fi
+
+    echo "Mounted filesystems:"
+    df -h -x tmpfs -x devtmpfs -x squashfs
+
+    read -r -p "Disk warning threshold in % [current: ${DISK_THRESHOLD}] (Enter to keep): " input
+    if [ -n "$input" ]; then
+        if is_valid_threshold "$input"; then
+            DISK_THRESHOLD=$input
+        else
+            echo "Invalid threshold. Keeping ${DISK_THRESHOLD}%."
+        fi
+    fi
+
+    echo
+    local found=0
+    while read -r fs size used avail pct mount; do
+        local pct_num=${pct%\%}
+        if [[ "$pct_num" =~ ^[0-9]+$ ]] && [ "$pct_num" -ge "$DISK_THRESHOLD" ]; then
+            echo "WARNING: $mount ($fs) is ${pct_num}% full"
+            log_activity "WARNING: disk $mount at ${pct_num}% above threshold ${DISK_THRESHOLD}%"
+            found=1
+        fi
+    done < <(df -hP -x tmpfs -x devtmpfs -x squashfs | tail -n +2)
+
+    if [ "$found" -eq 0 ]; then
+        echo "All filesystems are below ${DISK_THRESHOLD}%."
+    fi
+    log_activity "Monitored disk utilization"
+}
+# ---------- Temporary test (delete after testing) ----------
+monitor_disk
+cat "$LOG_FILE"
