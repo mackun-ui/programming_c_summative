@@ -35,6 +35,7 @@ int main(void) {
             case 3: update_transaction(&list); break;
             case 4: delete_transaction(&list); break;
             case 5: process_sales_data(&list); break;
+            case 6: filter_transactions_menu(&list); break;
             case 0: printf("Goodbye.\n"); break;
             default: printf("This option is not available yet.\n");
         }
