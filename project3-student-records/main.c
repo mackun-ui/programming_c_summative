@@ -35,6 +35,8 @@ int main(void) {
             case 1: register_student(&list); break;
             case 2: display_all_students(&list); break;
             case 3: display_student_details(&list); break;
+            case 4: update_student_info(&list); break;
+            case 5: delete_student(&list); break;
             case 6: add_course_to_student(&list); break;
             case 7: update_course_marks(&list); break;
             case 8: display_student_performance(&list); break;

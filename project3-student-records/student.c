@@ -203,3 +203,49 @@ void display_student_performance(StudentList *list) {
     }
     printf("Overall average: %.2f%%\n", student_average(s));
 }
+
+void update_student_info(StudentList *list) {
+    Student *s = select_student(list);
+    if (s == NULL) {
+        return;
+    }
+    printf("Updating student %d (the ID cannot be changed).\n", s->id);
+    read_line("New first name: ", s->firstName, MAX_NAME);
+    read_line("New last name: ", s->lastName, MAX_NAME);
+    read_line("New programme of study: ", s->programme, MAX_NAME);
+    s->year = read_int("New year of study (1-6): ", 1, 6);
+    printf("Student updated.\n");
+}
+
+void delete_student(StudentList *list) {
+    int id = read_int("Enter student ID to delete: ", 1, 999999);
+    int idx = find_index(list, id);
+    if (idx < 0) {
+        printf("Error: no student with ID %d.\n", id);
+        return;
+    }
+
+    char answer[8];
+    read_line("Delete this student? (y/n): ", answer, sizeof(answer));
+    if (answer[0] != 'y' && answer[0] != 'Y') {
+        printf("Cancelled.\n");
+        return;
+    }
+
+    free(list->students[idx].courses);         
+    for (int i = idx; i < list->count - 1; i++) {
+        list->students[i] = list->students[i + 1];
+    }
+    list->count--;
+
+    /* shrink the array with realloc when it is mostly empty */
+    if (list->capacity > INITIAL_CAPACITY && list->count < list->capacity / 4) {
+        int newCap = list->capacity / 2;
+        Student *tmp = (Student *)realloc(list->students, newCap * sizeof(Student));
+        if (tmp != NULL) {
+            list->students = tmp;
+            list->capacity = newCap;
+        }
+    }
+    printf("Student deleted.\n");
+}
