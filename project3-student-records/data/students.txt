@@ -1,10 +1,4 @@
-S|1001|Amara|Mensah|Software Engineering|2|3
-C|CS101|Programming in C|78.00|100.00
-C|CS102|Data Structures|65.50|100.00
-C|MA101|Discrete Mathematics|45.00|100.00
-S|1002|Kwame|Boateng|Software Engineering|3|2
-C|CS201|Operating Systems|82.00|100.00
-C|CS202|Databases|91.00|100.00
+S|1005|Abena|Darko|Computer Science|4|0
 S|1003|Efua|Owusu|Computer Science|1|3
 C|CS101|Programming in C|55.00|100.00
 C|MA101|Discrete Mathematics|38.00|100.00
@@ -12,5 +6,12 @@ C|EN101|Technical Writing|60.00|80.00
 S|1004|Yaw|Asante|Information Systems|2|2
 C|IS101|Systems Analysis|48.00|100.00
 C|IS102|Business Computing|72.00|100.00
-S|1005|Abena|Darko|Computer Science|4|0
-S|1006|Manuelle|Ackun|Cyber Security|4|0
+S|1001|Amara|Mensah|Software Engineering|2|3
+C|CS101|Programming in C|78.00|100.00
+C|CS102|Data Structures|65.50|100.00
+C|MA101|Discrete Mathematics|45.00|100.00
+S|1002|Kwame|Boateng|Software Engineering|3|2
+C|CS201|Operating Systems|82.00|100.00
+C|CS202|Databases|91.00|100.00
+S|1006|Manuelle|Ackun|Cyber Security|4|1
+C|213|IT Management|78.00|80.00
