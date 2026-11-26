@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "transaction.h"
 #include "utils.h"
+#include "storage.h"
 
 static void show_menu(void) {
     printf("\n===== SALES TRANSACTION MANAGEMENT SYSTEM =====\n");
@@ -26,6 +27,8 @@ int main(void) {
         return 1;
     }
 
+    load_from_file(&list, DATA_FILE);
+
     do {
         show_menu();
         choice = read_int("Choose an option: ", 0, 11);
@@ -39,7 +42,25 @@ int main(void) {
             case 7: search_transactions(&list); break;
             case 8: sort_transactions(&list); break;
             case 9: generate_sales_report(&list); break;
-            case 0: printf("Goodbye.\n"); break;
+            case 10:
+                if (save_to_file(&list, DATA_FILE)) {
+                    printf("Saved %d transaction(s) to %s.\n", list.count, DATA_FILE);
+                }
+                break;
+            case 11: {
+                char answer[8];
+                read_line("Loading replaces the current records. Continue? (y/n): ", answer, sizeof(answer));
+                if (answer[0] == 'y' || answer[0] == 'Y') {
+                    load_from_file(&list, DATA_FILE);
+                }
+                break;
+            }
+            case 0:
+                if (save_to_file(&list, DATA_FILE)) {
+                    printf("Saved %d transaction(s) to %s.\n", list.count, DATA_FILE);
+                }
+                printf("Goodbye.\n");
+                break;
             default: printf("This option is not available yet.\n");
         }
     } while (choice != 0);
