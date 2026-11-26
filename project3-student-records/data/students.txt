@@ -13,5 +13,3 @@ C|MA101|Discrete Mathematics|45.00|100.00
 S|1002|Kwame|Boateng|Software Engineering|3|2
 C|CS201|Operating Systems|82.00|100.00
 C|CS202|Databases|91.00|100.00
-S|1006|Manuelle|Ackun|Cyber Security|4|1
-C|213|IT Management|78.00|80.00
