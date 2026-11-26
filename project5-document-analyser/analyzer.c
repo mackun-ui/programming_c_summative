@@ -70,3 +70,124 @@ int count_occurrences(const char *text, const char *keyword) {
     }
     return count;
 }
+
+/* remembers a matching line number, growing the array with realloc. */
+static int record_match(ThreadArgs *a, int lineNo) {
+    if (a->matchingLines == a->matchCapacity) {
+        int newCap = (a->matchCapacity == 0) ? 8 : a->matchCapacity * 2;
+        int *tmp = (int *)realloc(a->matchLineNumbers, newCap * sizeof(int));
+        if (tmp == NULL) {
+            set_error(a, "memory allocation failed");
+            return 0;
+        }
+        a->matchLineNumbers = tmp;
+        a->matchCapacity = newCap;
+    }
+    a->matchLineNumbers[a->matchingLines] = lineNo;
+    a->matchingLines++;
+    return 1;
+}
+
+/* reads the file line by line, counting lines, occurrences and matching lines. */
+int search_file(FILE *fp, ThreadArgs *a) {
+    char *line = NULL;
+    size_t cap = 0;
+    int lineNo = 0;
+
+    while (getline(&line, &cap, fp) != -1) {
+        lineNo++;
+        int n = count_occurrences(line, a->keyword);
+        if (n > 0) {
+            a->totalOccurrences += n;
+            if (!record_match(a, lineNo)) {  
+                a->totalLines = lineNo;
+                return 0;
+            }
+        }
+    }
+    free(line);
+    a->totalLines = lineNo;
+
+    if (ferror(fp)) {
+        set_error(a, "error while reading the file");
+        return 0;
+    }
+    return 1;
+}
+
+/* writes this thread's report file. Returns 1 on success. */
+static int write_report(ThreadArgs *a) {
+    FILE *out = fopen(a->reportName, "w");
+    if (out == NULL) {
+        if (a->errorMsg[0] == '\0') {
+            set_error(a, "cannot create report file '%s': %s", a->reportName, strerror(errno));
+        }
+        return 0;
+    }
+
+    fprintf(out, "===== DOCUMENT ANALYSIS REPORT =====\n");
+    fprintf(out, "Input file: %s\n", a->filename);
+    fprintf(out, "Search keyword: %s\n", a->keyword);
+    fprintf(out, "Total lines: %d\n", a->totalLines);
+    fprintf(out, "Total occurrences: %d\n", a->totalOccurrences);
+    fprintf(out, "Matching lines: %d\n", a->matchingLines);
+
+    fprintf(out, "Line numbers: ");
+    if (a->matchingLines == 0) {
+        fprintf(out, "none\n");
+    } else {
+        for (int i = 0; i < a->matchingLines; i++) {
+            fprintf(out, "%s%d", (i > 0) ? ", " : "", a->matchLineNumbers[i]);
+        }
+        fprintf(out, "\n");
+    }
+
+    if (a->status == STATUS_SUCCESS) {
+        fprintf(out, "Status: SUCCESS%s\n",
+                (a->matchingLines == 0) ? " (keyword not found)" : "");
+    } else {
+        fprintf(out, "Status: FAILED - %s\n", a->errorMsg);
+    }
+
+    int failed = ferror(out);
+    if (fclose(out) != 0) {
+        failed = 1;
+    }
+    if (failed) {
+        if (a->errorMsg[0] == '\0') {
+            set_error(a, "error while writing '%s'", a->reportName);
+        }
+        return 0;
+    }
+    return 1;
+}
+
+/* the function each thread runs: analyze one file and write its report. */
+void *process_file(void *arg) {
+    ThreadArgs *a = (ThreadArgs *)arg;
+    int ok;
+
+    printf("[Thread %d] Processing %s ...\n", a->threadId, a->filename);
+
+    FILE *fp = fopen(a->filename, "r");
+    if (fp == NULL) {
+        set_error(a, "cannot open input file: %s", strerror(errno));
+        ok = 0;
+    } else {
+        ok = search_file(fp, a);
+        fclose(fp);
+    }
+
+    a->status = ok ? STATUS_SUCCESS : STATUS_FAILED;
+    if (!write_report(a)) {
+        a->status = STATUS_FAILED;
+        ok = 0;
+    }
+
+    if (ok) {
+        printf("[Thread %d] Successfully processed %s\n", a->threadId, a->filename);
+    } else {
+        printf("[Thread %d] ERROR processing %s: %s\n", a->threadId, a->filename, a->errorMsg);
+    }
+    return NULL;
+}
