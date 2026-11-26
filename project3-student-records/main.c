@@ -34,6 +34,10 @@ int main(void) {
         switch (choice) {
             case 1: register_student(&list); break;
             case 2: display_all_students(&list); break;
+            case 3: display_student_details(&list); break;
+            case 6: add_course_to_student(&list); break;
+            case 7: update_course_marks(&list); break;
+            case 8: display_student_performance(&list); break;
             case 0: printf("Goodbye.\n"); break;
             default: printf("This option is not available yet.\n");
         }

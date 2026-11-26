@@ -93,3 +93,113 @@ void display_all_students(const StudentList *list) {
         printf("%-8d %-25s %-22s %-5d %d\n", s->id, full, s->programme, s->year, s->numCourses);
     }
 }
+
+/* asks for an ID and returns the student, or NULL with an error message. */
+static Student *select_student(StudentList *list) {
+    int id = read_int("Enter student ID: ", 1, 999999);
+    Student *s = find_student_by_id(list, id);
+    if (s == NULL) {
+        printf("Error: no student with ID %d.\n", id);
+    }
+    return s;
+}
+
+/* overall average % using marks and maximum marks. returns -1 if no courses. */
+float student_average(const Student *s) {
+    float marks = 0.0f, maxMarks = 0.0f;
+    for (int i = 0; i < s->numCourses; i++) {
+        marks += s->courses[i].marks;
+        maxMarks += s->courses[i].maxMarks;
+    }
+    if (maxMarks <= 0.0f) {
+        return -1.0f;
+    }
+    return (marks / maxMarks) * 100.0f;
+}
+
+void display_student_details(StudentList *list) {
+    Student *s = select_student(list);
+    if (s == NULL) {
+        return;
+    }
+    printf("\n--- Student %d ---\n", s->id);
+    printf("Name: %s %s\n", s->firstName, s->lastName);
+    printf("Programme: %s\n", s->programme);
+    printf("Year: %d\n", s->year);
+    printf("Courses: %d\n", s->numCourses);
+    for (int i = 0; i < s->numCourses; i++) {
+        const Course *c = &s->courses[i];
+        printf("  %-10s %-30s %6.1f / %.1f\n", c->code, c->name, c->marks, c->maxMarks);
+    }
+}
+
+void add_course_to_student(StudentList *list) {
+    Student *s = select_student(list);
+    if (s == NULL) {
+        return;
+    }
+
+    Course c;
+    read_line("Course code: ", c.code, MAX_CODE);
+    for (int i = 0; i < s->numCourses; i++) {
+        if (strcmp(s->courses[i].code, c.code) == 0) {
+            printf("Error: course %s is already registered for this student.\n", c.code);
+            return;
+        }
+    }
+    read_line("Course name: ", c.name, MAX_COURSE_NAME);
+    c.maxMarks = read_float("Maximum marks: ", 1.0f, 1000.0f);
+    c.marks = read_float("Marks obtained: ", 0.0f, c.maxMarks);
+
+    Course *tmp = (Course *)realloc(s->courses, (s->numCourses + 1) * sizeof(Course));
+    if (tmp == NULL) {
+        printf("Error: memory allocation failed.\n");
+        return;
+    }
+    s->courses = tmp;
+    s->courses[s->numCourses] = c;
+    s->numCourses++;
+    printf("Course added.\n");
+}
+
+void update_course_marks(StudentList *list) {
+    Student *s = select_student(list);
+    if (s == NULL) {
+        return;
+    }
+    if (s->numCourses == 0) {
+        printf("This student has no courses yet.\n");
+        return;
+    }
+
+    char code[MAX_CODE];
+    read_line("Course code: ", code, MAX_CODE);
+    for (int i = 0; i < s->numCourses; i++) {
+        if (strcmp(s->courses[i].code, code) == 0) {
+            Course *c = &s->courses[i];
+            c->marks = read_float("New marks: ", 0.0f, c->maxMarks);
+            printf("Marks updated.\n");
+            return;
+        }
+    }
+    printf("Error: course %s not found for this student.\n", code);
+}
+
+void display_student_performance(StudentList *list) {
+    Student *s = select_student(list);
+    if (s == NULL) {
+        return;
+    }
+    printf("\n--- Academic performance: %s %s ---\n", s->firstName, s->lastName);
+    if (s->numCourses == 0) {
+        printf("No courses registered, so no average can be calculated.\n");
+        return;
+    }
+    for (int i = 0; i < s->numCourses; i++) {
+        const Course *c = &s->courses[i];
+        float pct = (c->marks / c->maxMarks) * 100.0f;
+        printf("%-10s %-28s %6.1f / %-6.1f %6.1f%%  %s\n", c->code, c->name,
+               c->marks, c->maxMarks, pct, pct >= PASS_PERCENT ? "PASS" : "FAIL");
+    }
+    printf("Overall average: %.2f%%\n", student_average(s));
+}

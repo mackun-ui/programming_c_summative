@@ -45,7 +45,7 @@ void update_student_info(StudentList *list);
 void delete_student(StudentList *list);
 void add_course_to_student(StudentList *list);
 void update_course_marks(StudentList *list);
-void display_student_performances(StudentList *list);
+void display_student_performance(StudentList *list);
 float student_average(const Student *s);
 
 #endif
