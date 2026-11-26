@@ -38,6 +38,7 @@ int main(void) {
             case 6: filter_transactions_menu(&list); break;
             case 7: search_transactions(&list); break;
             case 8: sort_transactions(&list); break;
+            case 9: generate_sales_report(&list); break;
             case 0: printf("Goodbye.\n"); break;
             default: printf("This option is not available yet.\n");
         }
