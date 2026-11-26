@@ -1,0 +1,6 @@
+The Internet of Things (IoT) connects everyday devices to the internet.
+IoT devices collect data using small sensors.
+
+Smart homes use IoT to control lighting and temperature.
+Security is a major concern for any IoT system.
+Cloud platforms store and analyse the data.

@@ -1,0 +1,3 @@
+Wireless sensors measure temperature and humidity.
+The gateway collects the readings and uploads them.
+Reports are generated at the end of each day.

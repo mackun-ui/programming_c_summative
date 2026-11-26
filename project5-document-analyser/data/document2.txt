@@ -1,0 +1,5 @@
+IoT in agriculture helps farmers monitor soil moisture.
+Solar powered IoT sensors work well in rural areas.
+Data from the sensors is sent to a gateway every hour.
+Farmers receive alerts on their phones.
+iot adoption is growing across Africa, and IOT projects are increasing.
