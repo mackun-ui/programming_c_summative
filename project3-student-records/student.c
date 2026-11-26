@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <strings.h>
 #include "student.h"
 #include "utils.h"
 
@@ -80,17 +82,34 @@ void register_student(StudentList *list) {
     printf("Student registered.\n");
 }
 
+/* prints the header line of the student table. */
+static void print_table_header(void) {
+    printf("\n%-8s %-25s %-22s %-5s %-8s %s\n", "ID", "Name", "Programme", "Year", "Courses", "Average");
+}
+
+/* prints one student as a table row. */
+static void print_student_row(const Student *s) {
+    char full[2 * MAX_NAME + 2];
+    char avg[16];
+    float a = student_average(s);
+
+    snprintf(full, sizeof(full), "%s %s", s->firstName, s->lastName);
+    if (a < 0.0f) {
+        snprintf(avg, sizeof(avg), "N/A");
+    } else {
+        snprintf(avg, sizeof(avg), "%.1f%%", a);
+    }
+    printf("%-8d %-25s %-22s %-5d %-8d %s\n", s->id, full, s->programme, s->year, s->numCourses, avg);
+}
+
 void display_all_students(const StudentList *list) {
     if (list->count == 0) {
         printf("No students registered.\n");
         return;
     }
-    printf("\n%-8s %-25s %-22s %-5s %s\n", "ID", "Name", "Programme", "Year", "Courses");
+    print_table_header();
     for (int i = 0; i < list->count; i++) {
-        const Student *s = &list->students[i];
-        char full[2 * MAX_NAME + 2];
-        snprintf(full, sizeof(full), "%s %s", s->firstName, s->lastName);
-        printf("%-8d %-25s %-22s %-5d %d\n", s->id, full, s->programme, s->year, s->numCourses);
+        print_student_row(&list->students[i]);
     }
 }
 
@@ -248,4 +267,71 @@ void delete_student(StudentList *list) {
         }
     }
     printf("Student deleted.\n");
+}
+
+/* manual case-insensitive "contains" check (no strstr/strcasestr). */
+static int contains_ignore_case(const char *text, const char *pattern) {
+    int tl = (int)strlen(text);
+    int pl = (int)strlen(pattern);
+
+    for (int i = 0; i + pl <= tl; i++) {
+        int j = 0;
+        while (j < pl && tolower((unsigned char)text[i + j]) == tolower((unsigned char)pattern[j])) {
+            j++;
+        }
+        if (j == pl) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* linear search by ID, name (first or last) or programme. */
+void search_students(const StudentList *list) {
+    if (list->count == 0) {
+        printf("No students registered.\n");
+        return;
+    }
+
+    printf("\nSearch by:\n 1. Student ID\n 2. First or last name\n 3. Programme of study\n");
+    int option = read_int("Choose: ", 1, 3);
+    int found = 0;
+
+    if (option == 1) {
+        int id = read_int("Student ID: ", 1, 999999);
+        for (int i = 0; i < list->count; i++) {
+            if (list->students[i].id == id) {
+                if (found == 0) {
+                    print_table_header();
+                }
+                print_student_row(&list->students[i]);
+                found++;
+            }
+        }
+    } else {
+        char query[MAX_NAME];
+        read_line(option == 2 ? "Name to search: " : "Programme to search: ", query, MAX_NAME);
+        for (int i = 0; i < list->count; i++) {
+            const Student *s = &list->students[i];
+            int match;
+            if (option == 2) {
+                match = contains_ignore_case(s->firstName, query) || contains_ignore_case(s->lastName, query);
+            } else {
+                match = contains_ignore_case(s->programme, query);
+            }
+            if (match) {
+                if (found == 0) {
+                    print_table_header();
+                }
+                print_student_row(s);
+                found++;
+            }
+        }
+    }
+
+    if (found == 0) {
+        printf("No matching students found.\n");
+    } else {
+        printf("%d match(es) found.\n", found);
+    }
 }

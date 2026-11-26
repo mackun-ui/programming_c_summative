@@ -48,4 +48,8 @@ void update_course_marks(StudentList *list);
 void display_student_performance(StudentList *list);
 float student_average(const Student *s);
 
+void search_students(const StudentList *list);
+void sort_students(StudentList *list);
+void generate_academic_report(const StudentList *list);
+
 #endif
