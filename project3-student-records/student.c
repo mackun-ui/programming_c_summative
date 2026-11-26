@@ -393,3 +393,89 @@ void sort_students(StudentList *list) {
     printf("Students sorted.\n");
     display_all_students(list);
 }
+
+void generate_academic_report(const StudentList *list) {
+    if (list->count == 0) {
+        printf("No students registered.\n");
+        return;
+    }
+
+    int totalCourses = 0, withCourses = 0;
+    int studentsPass = 0, studentsFail = 0;
+    int coursesPassed = 0, coursesFailed = 0;
+    float sumAvg = 0.0f;
+    const Student *best = NULL;
+    const Student *worst = NULL;
+    float bestAvg = 0.0f, worstAvg = 0.0f;
+
+    for (int i = 0; i < list->count; i++) {
+        const Student *s = &list->students[i];
+        totalCourses += s->numCourses;
+
+        for (int k = 0; k < s->numCourses; k++) {
+            float pct = (s->courses[k].marks / s->courses[k].maxMarks) * 100.0f;
+            if (pct >= PASS_PERCENT) {
+                coursesPassed++;
+            } else {
+                coursesFailed++;
+            }
+        }
+
+        float avg = student_average(s);
+        if (avg < 0.0f) {
+            continue;                        
+        }
+        withCourses++;
+        sumAvg += avg;
+        if (best == NULL || avg > bestAvg) {
+            best = s;
+            bestAvg = avg;
+        }
+        if (worst == NULL || avg < worstAvg) {
+            worst = s;
+            worstAvg = avg;
+        }
+        if (avg >= PASS_PERCENT) {
+            studentsPass++;
+        } else {
+            studentsFail++;
+        }
+    }
+
+    printf("\n===== ACADEMIC PERFORMANCE REPORT =====\n");
+    printf("Total registered students: %d\n", list->count);
+    printf("Total courses registered: %d\n", totalCourses);
+    printf("Students with courses: %d\n", withCourses);
+
+    if (withCourses > 0) {
+        printf("Overall average performance: %.2f%%\n", sumAvg / withCourses);
+        printf("Highest average: %s %s (%.2f%%)\n", best->firstName, best->lastName, bestAvg);
+        printf("Lowest average: %s %s (%.2f%%)\n", worst->firstName, worst->lastName, worstAvg);
+        printf("Students passing (avg >= %.0f%%): %d\n", PASS_PERCENT, studentsPass);
+        printf("Students failing (avg < %.0f%%) : %d\n", PASS_PERCENT, studentsFail);
+        printf("Course results passed / failed: %d / %d\n", coursesPassed, coursesFailed);
+    } else {
+        printf("No course data yet, so averages are not available.\n");
+    }
+
+    printf("\nStudents per programme:\n");
+    for (int i = 0; i < list->count; i++) {
+        int seenBefore = 0;
+        for (int j = 0; j < i; j++) {
+            if (strcasecmp(list->students[i].programme, list->students[j].programme) == 0) {
+                seenBefore = 1;
+                break;
+            }
+        }
+        if (seenBefore) {
+            continue;
+        }
+        int count = 0;
+        for (int j = 0; j < list->count; j++) {
+            if (strcasecmp(list->students[i].programme, list->students[j].programme) == 0) {
+                count++;
+            }
+        }
+        printf("  %-25s %d\n", list->students[i].programme, count);
+    }
+}

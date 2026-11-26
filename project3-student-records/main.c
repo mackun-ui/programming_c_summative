@@ -42,6 +42,7 @@ int main(void) {
             case 8: display_student_performance(&list); break;
             case 9: search_students(&list); break;
             case 10: sort_students(&list); break;
+            case 11: generate_academic_report(&list); break;
             case 0: printf("Goodbye.\n"); break;
             default: printf("This option is not available yet.\n");
         }
