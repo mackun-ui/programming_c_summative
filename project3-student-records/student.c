@@ -335,3 +335,61 @@ void search_students(const StudentList *list) {
         printf("%d match(es) found.\n", found);
     }
 }
+
+/* compares two students by the chosen key. negative: a first, positive: b first. */
+static int compare_students(const Student *a, const Student *b, int key) {
+    switch (key) {
+        case 1:
+            return a->id - b->id;
+        case 2: {
+            int r = strcasecmp(a->lastName, b->lastName);
+            if (r != 0) {
+                return r;
+            }
+            return strcasecmp(a->firstName, b->firstName);
+        }
+        case 3: {
+            float x = student_average(a);
+            float y = student_average(b);
+            if (x < y) return -1;
+            if (x > y) return 1;
+            return 0;
+        }
+        case 4:
+            return strcasecmp(a->programme, b->programme);
+    }
+    return 0;
+}
+
+/* manual insertion sort (no qsort). */
+void sort_students(StudentList *list) {
+    if (list->count < 2) {
+        printf("Not enough students to sort.\n");
+        return;
+    }
+
+    printf("\nSort by:\n 1. Student ID\n 2. Name (alphabetical)\n 3. Overall average\n 4. Programme of study\n");
+    int key = read_int("Choose: ", 1, 4);
+    printf(" 1. Ascending\n 2. Descending\n");
+    int order = read_int("Choose: ", 1, 2);
+
+    for (int i = 1; i < list->count; i++) {
+        Student current = list->students[i];
+        int j = i - 1;
+        while (j >= 0) {
+            int cmp = compare_students(&list->students[j], &current, key);
+            if (order == 2) {
+                cmp = -cmp;
+            }
+            if (cmp <= 0) {
+                break;
+            }
+            list->students[j + 1] = list->students[j];
+            j--;
+        }
+        list->students[j + 1] = current;
+    }
+
+    printf("Students sorted.\n");
+    display_all_students(list);
+}
