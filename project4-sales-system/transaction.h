@@ -67,4 +67,7 @@ void sort_transactions(TransactionList *list);
 /* reports */
 void generate_sales_report(const TransactionList *list);
 
+void print_transaction_header(void);
+void print_transaction_row(const Transaction *t);
+
 #endif

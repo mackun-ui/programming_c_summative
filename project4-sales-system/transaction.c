@@ -75,16 +75,23 @@ void add_transaction(TransactionList *list) {
     }
 }
 
+void print_transaction_header(void) {
+    printf("\n%-6s %-22s %-6s %-12s %-12s %s\n", "ID", "Product", "Qty", "Unit price", "Total", "Date");
+}
+
+void print_transaction_row(const Transaction *t) {
+    printf("%-6d %-22s %-6d %-12.2f %-12.2f %s\n", t->id, t->product, t->quantity,
+           t->unitPrice, t->total, t->date);
+}
+
 void display_all_transactions(const TransactionList *list) {
     if (list->count == 0) {
         printf("No transactions recorded.\n");
         return;
     }
-    printf("\n%-6s %-22s %-6s %-12s %-12s %s\n", "ID", "Product", "Qty", "Unit price", "Total", "Date");
+    print_transaction_header();
     for (int i = 0; i < list->count; i++) {
-        const Transaction *t = &list->items[i];
-        printf("%-6d %-22s %-6d %-12.2f %-12.2f %s\n", t->id, t->product, t->quantity,
-               t->unitPrice, t->total, t->date);
+        print_transaction_row(&list->items[i]);
     }
 }
 
