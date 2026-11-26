@@ -32,6 +32,8 @@ int main(void) {
         switch (choice) {
             case 1: add_transaction(&list); break;
             case 2: display_all_transactions(&list); break;
+            case 3: update_transaction(&list); break;
+            case 4: delete_transaction(&list); break;
             case 0: printf("Goodbye.\n"); break;
             default: printf("This option is not available yet.\n");
         }

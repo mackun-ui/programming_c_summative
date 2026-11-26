@@ -87,3 +87,52 @@ void display_all_transactions(const TransactionList *list) {
                t->unitPrice, t->total, t->date);
     }
 }
+
+void update_transaction(TransactionList *list) {
+    int id = read_int("Transaction ID to update: ", 1, 999999);
+    Transaction *t = find_transaction_by_id(list, id);
+    if (t == NULL) {
+        printf("Error: no transaction with ID %d.\n", id);
+        return;
+    }
+
+    printf("Updating transaction %d (the ID cannot be changed).\n", t->id);
+    read_line("New product name: ", t->product, MAX_PRODUCT);
+    t->quantity = read_int("New quantity sold: ", 1, 100000);
+    t->unitPrice = read_float("New unit price: ", 0.01f, 1000000.0f);
+    t->total = t->quantity * t->unitPrice;
+    read_date("New date (YYYY-MM-DD): ", t->date);
+    printf("Transaction updated. New total: %.2f\n", t->total);
+}
+
+void delete_transaction(TransactionList *list) {
+    int id = read_int("Transaction ID to delete: ", 1, 999999);
+    int idx = find_index(list, id);
+    if (idx < 0) {
+        printf("Error: no transaction with ID %d.\n", id);
+        return;
+    }
+
+    char answer[8];
+    read_line("Delete this transaction? (y/n): ", answer, sizeof(answer));
+    if (answer[0] != 'y' && answer[0] != 'Y') {
+        printf("Cancelled.\n");
+        return;
+    }
+
+    for (int i = idx; i < list->count - 1; i++) {
+        list->items[i] = list->items[i + 1];
+    }
+    list->count--;
+
+    /* shrink the array with realloc when it is mostly empty */
+    if (list->capacity > INITIAL_CAPACITY && list->count < list->capacity / 4) {
+        int newCap = list->capacity / 2;
+        Transaction *tmp = (Transaction *)realloc(list->items, newCap * sizeof(Transaction));
+        if (tmp != NULL) {
+            list->items = tmp;
+            list->capacity = newCap;
+        }
+    }
+    printf("Transaction deleted.\n");
+}
