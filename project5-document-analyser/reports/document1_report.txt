@@ -1,8 +1,8 @@
 ===== DOCUMENT ANALYSIS REPORT =====
 Input file: data/document1.txt
-Search keyword: banana
+Search keyword: IoT
 Total lines: 6
-Total occurrences: 0
-Matching lines: 0
-Line numbers: none
-Status: SUCCESS (keyword not found)
+Total occurrences: 4
+Matching lines: 4
+Line numbers: 1, 2, 4, 5
+Status: SUCCESS

@@ -1,0 +1,18 @@
+===== MULTI-THREADED DOCUMENT ANALYZER =====
+
+Search Keyword: IoT
+Number of Input Files: 2
+
+[Main] Thread 1 created for data/document1.txt
+[Thread 1] Processing data/document1.txt ...
+[Main] Thread 2 created for data/missing.txt
+[Thread 2] Processing data/missing.txt ...
+[Thread 2] ERROR processing data/missing.txt: cannot open input file: No such file or directory
+[Thread 1] Successfully processed data/document1.txt
+
+===== PROCESSING SUMMARY =====
+
+data/document1.txt: Completed (4 occurrence(s) in 4 line(s))
+data/missing.txt: FAILED - cannot open input file: No such file or directory
+
+1 of 2 file(s) could not be processed.
