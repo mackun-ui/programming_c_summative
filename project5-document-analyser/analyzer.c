@@ -191,3 +191,32 @@ void *process_file(void *arg) {
     }
     return NULL;
 }
+
+/* prints one line per file, then the overall result. */
+void display_results(const ThreadArgs *args, int n) {
+    int failed = 0;
+
+    printf("\n===== PROCESSING SUMMARY =====\n\n");
+    for (int i = 0; i < n; i++) {
+        const ThreadArgs *a = &args[i];
+        if (a->status == STATUS_SUCCESS) {
+            if (a->matchingLines == 0) {
+                printf("%s: Completed (keyword not found)\n", a->filename);
+            } else {
+                printf("%s: Completed (%d occurrence(s) in %d line(s))\n",
+                       a->filename, a->totalOccurrences, a->matchingLines);
+            }
+        } else {
+            printf("%s: FAILED - %s\n", a->filename, a->errorMsg);
+            failed++;
+        }
+    }
+
+    printf("\n");
+    if (failed == 0) {
+        printf("All processing tasks completed.\n");
+        printf("Reports generated successfully.\n");
+    } else {
+        printf("%d of %d file(s) could not be processed.\n", failed, n);
+    }
+}

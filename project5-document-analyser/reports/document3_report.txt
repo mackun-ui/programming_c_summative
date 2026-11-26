@@ -1,0 +1,8 @@
+===== DOCUMENT ANALYSIS REPORT =====
+Input file: data/document3.txt
+Search keyword: IoT
+Total lines: 3
+Total occurrences: 0
+Matching lines: 0
+Line numbers: none
+Status: SUCCESS (keyword not found)

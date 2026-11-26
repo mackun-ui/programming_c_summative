@@ -1,0 +1,8 @@
+===== DOCUMENT ANALYSIS REPORT =====
+Input file: data/missing.txt
+Search keyword: IoT
+Total lines: 0
+Total occurrences: 0
+Matching lines: 0
+Line numbers: none
+Status: FAILED - cannot open input file: No such file or directory
