@@ -51,5 +51,6 @@ float student_average(const Student *s);
 void search_students(const StudentList *list);
 void sort_students(StudentList *list);
 void generate_academic_report(const StudentList *list);
+int list_append(StudentList *list, const Student *s);
 
 #endif

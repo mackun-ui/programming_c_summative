@@ -479,3 +479,13 @@ void generate_academic_report(const StudentList *list) {
         printf("  %-25s %d\n", list->students[i].programme, count);
     }
 }
+
+/* adds a copy of s to the list (the list takes over s->courses). */
+int list_append(StudentList *list, const Student *s) {
+    if (!ensure_capacity(list)) {
+        return 0;
+    }
+    list->students[list->count] = *s;
+    list->count++;
+    return 1;
+}
